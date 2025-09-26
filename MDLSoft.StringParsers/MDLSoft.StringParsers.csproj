@@ -3,14 +3,14 @@
     <TargetFrameworks>netstandard2.0;net40</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MDLSoft.StringParsers</Title>
-    <Description>Read and write text files</Description>
+    <Description>A powerful .NET library for parsing and writing structured text data using fixed-width and separator-based formats</Description>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/mdallago/MDLSoft..StringParsers</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mdallago/MDLSoft.StringParsers</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Version>1.0.1</Version>
   </PropertyGroup>

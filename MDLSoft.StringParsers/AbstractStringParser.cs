@@ -11,9 +11,9 @@ namespace MDLSoft.StringParsers
     {
         protected class DefinitionBuilder
         {
-            public PaserDefinition Definition { get; private set; }
+            public ParserDefinition Definition { get; private set; }
 
-            public DefinitionBuilder(PaserDefinition definition)
+            public DefinitionBuilder(ParserDefinition definition)
             {
                 this.Definition = definition;
             }
@@ -37,7 +37,7 @@ namespace MDLSoft.StringParsers
             }
         }
 
-        protected class PaserDefinition
+        protected class ParserDefinition
         {
             public Func<string, bool> Validator { get; set; }
             public Delegate Converter { get; set; }
@@ -45,10 +45,10 @@ namespace MDLSoft.StringParsers
             public MemberInfo Member { get; set; }
         }
         
-        private readonly List<PaserDefinition> definitions = new List<PaserDefinition>();
+        private readonly List<ParserDefinition> definitions = new List<ParserDefinition>();
         private readonly TypeAccessor accesor = TypeAccessor.Create(typeof(T));
 
-        protected IEnumerable<PaserDefinition> Definitions
+        protected IEnumerable<ParserDefinition> Definitions
         {
             get { return definitions; }
         }
@@ -62,13 +62,16 @@ namespace MDLSoft.StringParsers
             throw new StringParserException(string.Format("Invalid expression type: Expected ExpressionType.MemberAccess, Found {0}", expression.Body.NodeType));
         }
 
-        protected abstract string GetValue(PaserDefinition definition);
+        protected abstract string GetValue(ParserDefinition definition);
         protected abstract string GetString(string value);
         
         protected abstract void Initialize(string text);
 
         public T Parse(string text)
         {
+            if (text == null)
+                throw new ArgumentNullException(nameof(text));
+                
             Initialize(text);
             var ret = new T();
             
@@ -78,7 +81,7 @@ namespace MDLSoft.StringParsers
                 
                 if ((definition.Validator != null) &&  (!definition.Validator(value)))
                 {
-                    throw new StringParserException(string.Format("{0} no valido: {1}", definition.Member.Name, value));
+                    throw new StringParserException(string.Format("Invalid value for {0}: {1}", definition.Member.Name, value));
                 }
 
                 try
@@ -91,7 +94,7 @@ namespace MDLSoft.StringParsers
                 }
                 catch (Exception ex)
                 {
-                    throw new StringParserException(string.Format("{0} no valido: {1}", definition.Member.Name, value),ex);
+                    throw new StringParserException(string.Format("Invalid value for {0}: {1}", definition.Member.Name, value),ex);
                 }
             }
 
@@ -100,6 +103,9 @@ namespace MDLSoft.StringParsers
 
         public string Write(T data)
         {
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
+                
             var sb = new StringBuilder();
 
             foreach (var definition in definitions)
@@ -116,14 +122,14 @@ namespace MDLSoft.StringParsers
                 }
                 catch (Exception ex)
                 {
-                    throw new StringParserException(string.Format("{0} no valido: {1}", definition.Member.Name, value),ex);
+                    throw new StringParserException(string.Format("Invalid value for {0}: {1}", definition.Member.Name, value),ex);
                 }
             }
 
             return sb.ToString();
         }
 
-        protected DefinitionBuilder AddDefinition<TProperty>(Expression<Func<T, TProperty>> property, PaserDefinition definition)
+        protected DefinitionBuilder AddDefinition<TProperty>(Expression<Func<T, TProperty>> property, ParserDefinition definition)
         {
             definition.Member = DecodeMemberAccessExpression(property);
             definitions.Add(definition);

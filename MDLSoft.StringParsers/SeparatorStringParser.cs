@@ -5,7 +5,7 @@ namespace MDLSoft.StringParsers
 {
     public abstract class SeparatorStringParser<T> : AbstractStringParser<T> where T : class,new()
     {
-        private class SeparatorParserDefinition : PaserDefinition
+        private class SeparatorParserDefinition : ParserDefinition
         {
             public int Index { get; set; }
         }
@@ -20,12 +20,21 @@ namespace MDLSoft.StringParsers
 
         protected DefinitionBuilder Define<TProperty>(Expression<Func<T, TProperty>> property, int index)
         {
+            if (index < 0)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index cannot be negative");
+                
             return AddDefinition(property, new SeparatorParserDefinition { Index = index });
         }
 
-        protected override string GetValue(PaserDefinition definition)
+        protected override string GetValue(ParserDefinition definition)
         {
-            return partes[((SeparatorParserDefinition)definition).Index];
+            var sepDef = (SeparatorParserDefinition)definition;
+            if (partes == null)
+                throw new StringParserException("Input data has not been initialized");
+            if (sepDef.Index < 0 || sepDef.Index >= partes.Length)
+                throw new StringParserException(string.Format("Index {0} is out of range for field {1}", sepDef.Index, definition.Member.Name));
+                
+            return partes[sepDef.Index];
         }
 
         protected override string GetString(string value)

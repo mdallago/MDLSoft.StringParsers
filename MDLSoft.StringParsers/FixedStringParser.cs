@@ -66,7 +66,7 @@ namespace MDLSoft.StringParsers
             }
         }
 
-        private class FixedParserDefinition : PaserDefinition
+        private class FixedParserDefinition : ParserDefinition
         {
             public int Start { get; set; }
             public int Length { get; set; }
@@ -78,6 +78,7 @@ namespace MDLSoft.StringParsers
             {
                 return x =>
                 {
+                    if (x == null) return new string(@char, length);
                     var temp = x.ToString().PadLeft(length, @char);
                     return (temp.Length > length) ? temp.Substring(0, length) : temp;
                 };
@@ -87,6 +88,7 @@ namespace MDLSoft.StringParsers
             {
                 return x =>
                 {
+                    if (x == null) return new string(@char, length);
                     var temp = x.ToString().PadRight(length, @char);
                     return (temp.Length > length) ? temp.Substring(0, length) : temp;
                 };
@@ -97,12 +99,25 @@ namespace MDLSoft.StringParsers
 
         protected FixedStringDefinitionBuilder Define<TProperty>(Expression<Func<T, TProperty>> property, int start, int length)
         {
+            if (start < 0)
+                throw new ArgumentOutOfRangeException(nameof(start), "Start position cannot be negative");
+            if (length <= 0)
+                throw new ArgumentOutOfRangeException(nameof(length), "Length must be positive");
+                
             return new FixedStringDefinitionBuilder(AddDefinition(property, new FixedParserDefinition { Start = start, Length = length }));
         }
 
-        protected override string GetValue(PaserDefinition definition)
+        protected override string GetValue(ParserDefinition definition)
         {
-            return data.Substring(((FixedParserDefinition)definition).Start, ((FixedParserDefinition)definition).Length);
+            var fixedDef = (FixedParserDefinition)definition;
+            if (data == null)
+                throw new StringParserException("Input data is null");
+            if (fixedDef.Start < 0 || fixedDef.Start >= data.Length)
+                throw new StringParserException(string.Format("Start position {0} is out of range for field {1}", fixedDef.Start, definition.Member.Name));
+            if (fixedDef.Start + fixedDef.Length > data.Length)
+                throw new StringParserException(string.Format("Length {0} extends beyond input data for field {1}", fixedDef.Length, definition.Member.Name));
+            
+            return data.Substring(fixedDef.Start, fixedDef.Length);
         }
 
         protected override string GetString(string value)
@@ -125,7 +140,7 @@ namespace MDLSoft.StringParsers
             {
                 if (definition.Start != inicio + largo)
                 {
-                    throw new StringParserException(string.Format("Error en la definicion de los campos. Campo:{0}", definition.Member));
+                    throw new StringParserException(string.Format("Error in field definition. Field: {0}", definition.Member));
                 }
                 inicio = definition.Start;
                 largo = definition.Length;
