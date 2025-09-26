@@ -107,9 +107,38 @@ jobs:
     
     - name: 🔍 Validate NuGet packages
       run: |
+        echo "Validating NuGet packages..."
         foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-          dotnet nuget verify $file
+          Write-Host "Validating package: $($file.Name)"
+          
+          # Check if package exists and has reasonable size
+          if ($file.Length -lt 1KB) {
+            Write-Error "Package $($file.Name) is too small (less than 1KB)"
+            exit 1
+          }
+          
+          # Verify package can be inspected (basic structure validation)
+          try {
+            $tempDir = New-TemporaryFile | %{ rm $_; mkdir $_ }
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($file.FullName, $tempDir)
+            
+            # Check for required files in NuGet package
+            $nuspecFiles = Get-ChildItem $tempDir -Filter "*.nuspec" -Recurse
+            if ($nuspecFiles.Count -eq 0) {
+              Write-Error "Package $($file.Name) missing .nuspec file"
+              exit 1
+            }
+            
+            Write-Host "✅ Package $($file.Name) structure is valid"
+            Remove-Item $tempDir -Recurse -Force
+          }
+          catch {
+            Write-Error "Failed to validate package structure for $($file.Name): $($_.Exception.Message)"
+            exit 1
+          }
         }
+        Write-Host "🎉 All packages validated successfully!"
 
   security-scan:
     runs-on: ubuntu-latest

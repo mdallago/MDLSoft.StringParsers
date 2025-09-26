@@ -41,6 +41,29 @@ This directory contains GitHub Actions workflows for the MDLSoft.StringParsers p
 2. **For Codecov**: Repository will be automatically detected
 3. **For Security Scanning**: CodeQL is enabled by default
 
+## Package Signing (Optional)
+
+The current validation does **not require package signing**. If you want to enable package signing:
+
+1. **Generate a code signing certificate**
+2. **Add certificate to repository secrets**:
+   - `CERTIFICATE_BASE64`: Base64-encoded certificate
+   - `CERTIFICATE_PASSWORD`: Certificate password
+3. **Update the pack command in workflows**:
+   ```yaml
+   - name: Sign and Pack
+     run: |
+       dotnet pack --configuration Release --no-build --output ./artifacts
+       # Add signing commands here if needed
+   ```
+
+## Troubleshooting
+
+### NU3004 Error (Package not signed)
+- **Issue**: `dotnet nuget verify` requires signed packages
+- **Solution**: Packages are validated using structure checks instead of signature verification
+- **Optional**: Enable package signing following the steps above
+
 ## Usage
 
 - **Push to main**: Runs full CI pipeline
