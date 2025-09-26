@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.2)'
+        required: true
+        type: string
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  DOTNET_NOLOGO: true
+
+jobs:
+  release:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Get version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" == "release" ]; then
+          VERSION="${{ github.event.release.tag_name }}"
+        else
+          VERSION="${{ github.event.inputs.version }}"
+        fi
+        echo "VERSION=${VERSION#v}" >> $GITHUB_OUTPUT
+        echo "Version: ${VERSION#v}"
+    
+    - name: Update project version
+      run: |
+        sed -i 's/<Version>.*<\/Version>/<Version>${{ steps.version.outputs.VERSION }}<\/Version>/' MDLSoft.StringParsers/MDLSoft.StringParsers.csproj
+        cat MDLSoft.StringParsers/MDLSoft.StringParsers.csproj | grep Version
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Test
+      run: dotnet test --configuration Release --no-build
+    
+    - name: Pack
+      run: dotnet pack --configuration Release --no-build --output ./artifacts
+    
+    - name: Publish to NuGet
+      if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+      run: |
+        dotnet nuget push ./artifacts/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages-${{ steps.version.outputs.VERSION }}
+        path: ./artifacts/*.nupkg
