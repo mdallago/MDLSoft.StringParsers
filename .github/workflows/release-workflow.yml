@@ -127,7 +127,7 @@ jobs:
             
             $releaseNotes += "`n`n**Full Changelog**: https://github.com/${{ github.repository }}/compare/$previousTag...$tag"
           } else {
-            $releaseNotes = @"## 🎉 Release $tag This release includes the latest updates and improvements to MDLSoft.StringParsers.**Full Changelog**: https://github.com/${{ github.repository }}/commits/$tag"@
+            $releaseNotes = "## 🎉 Release $tag This release includes the latest updates and improvements to MDLSoft.StringParsers.**Full Changelog**: https://github.com/${{ github.repository }}/commits/$tag"
           }
         }
         
