@@ -34,7 +34,7 @@ jobs:
       with:
         dotnet-version: '8.0.x'
     
-    - name: Get version
+    - name: Get version from release
       id: version
       run: |
         if ("${{ github.event_name }}" -eq "release") {
@@ -44,23 +44,7 @@ jobs:
         }
         $cleanVersion = $version -replace '^v', ''
         echo "VERSION=$cleanVersion" >> $env:GITHUB_OUTPUT
-        Write-Host "Version: $cleanVersion"
-    
-    - name: Update project version
-      run: |
-        $projectFile = "MDLSoft.StringParsers/MDLSoft.StringParsers.csproj"
-        $version = "${{ steps.version.outputs.VERSION }}"
-        
-        $content = Get-Content $projectFile -Raw
-        $content = $content -replace '<Version>[^<]+</Version>', "<Version>$version</Version>"
-        $content = $content -replace '<AssemblyVersion>[^<]+</AssemblyVersion>', "<AssemblyVersion>$version.0</AssemblyVersion>"
-        $content = $content -replace '<FileVersion>[^<]+</FileVersion>', "<FileVersion>$version.0</FileVersion>"
-        
-        Set-Content $projectFile -Value $content -Encoding UTF8
-        Write-Host "Updated project version to: $version"
-        
-        # Show the updated version
-        Get-Content $projectFile | Select-String "Version"
+        Write-Host "Using version: $cleanVersion"
     
     - name: Restore dependencies
       run: dotnet restore
