@@ -1,5 +1,6 @@
 name: Release
 
+# Manual trigger only - should NOT run on push events
 on:
   workflow_dispatch:
     inputs:
