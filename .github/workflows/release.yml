@@ -59,12 +59,14 @@ jobs:
       run: dotnet pack --configuration Release --no-build --output ./artifacts
     
     - name: Publish to NuGet
-      if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
       run: |
-        dotnet nuget push ./artifacts/*.nupkg \
-          --api-key ${{ secrets.NUGET_API_KEY }} \
-          --source https://api.nuget.org/v3/index.json \
-          --skip-duplicate
+        foreach($file in (Get-ChildItem ./artifacts -Filter "*.nupkg")) {
+          Write-Host "Publishing package: $($file.Name)"
+          dotnet nuget push $file.FullName \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+        }
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

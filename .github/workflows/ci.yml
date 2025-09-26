@@ -190,8 +190,8 @@ jobs:
         path: ${{ env.NuGetDirectory }}
     
     - name: 🚀 Publish NuGet packages
-      if: false # Set to true when ready to publish
       run: |
         foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-          dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          Write-Host "Publishing package: $($file.Name)"
+          dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
         }

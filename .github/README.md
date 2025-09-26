@@ -37,7 +37,26 @@ This directory contains GitHub Actions workflows for the MDLSoft.StringParsers p
 
 ## Setup Instructions
 
-1. **For NuGet Publishing**: Add `NUGET_API_KEY` secret to repository settings
+### 🚀 **NuGet Publishing (ENABLED)**
+
+**NuGet publishing is now ENABLED and ready to use!**
+
+1. **Set up API Key**: 
+   - Get your NuGet API key from [nuget.org](https://www.nuget.org/account/apikeys)
+   - Add `NUGET_API_KEY` secret to repository settings
+   - See detailed setup: [NUGET_SETUP.md](NUGET_SETUP.md)
+
+2. **Publishing Triggers**:
+   - ✅ **Automatic**: Push to main branch → publishes latest version
+   - ✅ **Releases**: Create GitHub release → publishes tagged version  
+   - ✅ **Manual**: Use workflow dispatch for on-demand publishing
+
+3. **Environment Protection**:
+   - Uses `production` environment for additional security
+   - Requires manual approval before publishing (optional)
+
+### 📊 **Other Services**
+
 2. **For Codecov**: Repository will be automatically detected
 3. **For Security Scanning**: CodeQL is enabled by default
 

@@ -4,15 +4,31 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MDLSoft.StringParsers</Title>
     <Description>A powerful .NET library for parsing and writing structured text data using fixed-width and separator-based formats</Description>
+    <Authors>MDLSoft</Authors>
+    <Company>MDLSoft</Company>
+    <Copyright>Copyright © MDLSoft 2024</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/mdallago/MDLSoft.StringParsers</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mdallago/MDLSoft.StringParsers</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>parser;csv;fixed-width;text-processing;data-parsing;file-parsing;string-manipulation;dotnet;netstandard</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/mdallago/MDLSoft.StringParsers</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
     <Version>1.0.1</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <PackageReleaseNotes>
+      v1.0.1: Major code quality improvements and modernization
+      - Fixed spelling errors and localized error messages  
+      - Added comprehensive input validation and null checks
+      - Enhanced error handling with detailed field-specific messages
+      - Added XML documentation and improved README
+      - Upgraded to .NET 8 for testing with latest packages
+      - Full backward compatibility maintained
+    </PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FastMember" Version="1.3.0" />
