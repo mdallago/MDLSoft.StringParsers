@@ -113,10 +113,7 @@ jobs:
             # Get commits since previous tag
             $commits = git log --oneline "$previousTag..HEAD"
             
-            $releaseNotes = @"
-## What's Changed
-
-"@
+            $releaseNotes = @"## What's Changed"@ 
             
             if ($commits) {
               foreach ($commit in ($commits -split "`n")) {
@@ -130,13 +127,7 @@ jobs:
             
             $releaseNotes += "`n`n**Full Changelog**: https://github.com/${{ github.repository }}/compare/$previousTag...$tag"
           } else {
-            $releaseNotes = @"
-## 🎉 Release $tag
-
-This release includes the latest updates and improvements to MDLSoft.StringParsers.
-
-**Full Changelog**: https://github.com/${{ github.repository }}/commits/$tag
-"@
+            $releaseNotes = @"## 🎉 Release $tag This release includes the latest updates and improvements to MDLSoft.StringParsers.**Full Changelog**: https://github.com/${{ github.repository }}/commits/$tag"@
           }
         }
         
@@ -160,14 +151,6 @@ This release includes the latest updates and improvements to MDLSoft.StringParse
         git add MDLSoft.StringParsers/MDLSoft.StringParsers.csproj
         git commit -m "chore: bump version to $version
 
-🔢 Version Update:
-- Updated to version $version
-- Automated version bump for release
-
-This commit will be tagged as ${{ steps.version.outputs.TAG }}"
-        
-        Write-Host "✅ Version changes committed"
-    
     - name: 📦 Restore dependencies
       run: dotnet restore
     
