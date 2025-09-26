@@ -36,8 +36,16 @@ foreach ($file in $packageFiles) {
     
     # Validate package structure
     try {
+        # Create a proper temporary directory with GUID to ensure uniqueness
         $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ([System.Guid]::NewGuid().ToString())
         New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+        
+        Write-Host "  📁 Using temp directory: $tempDir"
+        
+        # Verify temp directory was created
+        if (-not (Test-Path $tempDir)) {
+            throw "Failed to create temporary directory: $tempDir"
+        }
         
         # Extract package to temporary directory
         Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -52,9 +60,9 @@ foreach ($file in $packageFiles) {
         Write-Host "  ✅ Package structure is valid"
         
         # Check for lib directory (should contain assemblies)
-        $libDir = Get-ChildItem $tempDir -Name "lib" -Directory
-        if ($libDir) {
-            $assemblies = Get-ChildItem (Join-Path $tempDir "lib") -Filter "*.dll" -Recurse
+        $libDirs = Get-ChildItem $tempDir -Name "lib" -Directory -ErrorAction SilentlyContinue
+        if ($libDirs) {
+            $assemblies = Get-ChildItem (Join-Path $tempDir "lib") -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue
             Write-Host "  ✅ Found $($assemblies.Count) assembly/assemblies"
         }
         
