@@ -149,7 +149,7 @@ jobs:
         git config --local user.name "GitHub Action"
         
         git add MDLSoft.StringParsers/MDLSoft.StringParsers.csproj
-        git commit -m "chore: bump version to $version
+        git commit -m "chore: bump version to $version"
 
     - name: 📦 Restore dependencies
       run: dotnet restore
