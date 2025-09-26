@@ -1,6 +1,6 @@
-name: Release
+name: Manual Release
 
-# Manual trigger only - should NOT run on push events
+# This workflow should ONLY run on manual dispatch
 on:
   workflow_dispatch:
     inputs:
