@@ -17,9 +17,9 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
-    <FileVersion>1.1.1.0</FileVersion>
+    <Version>1.1.2</Version>
+    <AssemblyVersion>1.1.2.0</AssemblyVersion>
+    <FileVersion>1.1.2.0</FileVersion>
     <PackageReleaseNotes>
       v1.0.1: Major code quality improvements and modernization
       - Fixed spelling errors and localized error messages  
@@ -45,4 +45,5 @@
     </None>
   </ItemGroup>
 </Project>
+
 
