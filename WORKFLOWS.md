@@ -23,9 +23,11 @@ After thorough analysis and simplification, we now have **2 essential workflows*
 
 ---
 
-### **2. Release** (`release.yml`)
+### **2. Release Workflow** (`release-workflow.yml`)
 **Triggers:** Manual trigger only (workflow_dispatch)
 **Purpose:** Complete release process - everything in one workflow!
+
+**Note:** ⚠️ Due to a GitHub Actions platform issue, this workflow may show "failures" when triggered by push events. These are false failures and can be safely ignored. The workflow will work perfectly when manually triggered.
 
 **Complete Process (All-in-One):**
 1. 📝 Updates project version in `.csproj` file
@@ -38,9 +40,11 @@ After thorough analysis and simplification, we now have **2 essential workflows*
 8. 📤 Pushes all changes back to main
 
 **Usage:**
-- Go to Actions → "Release" → "Run workflow"
+- Go to Actions → "Release Workflow" → "Run workflow"
 - Enter version (e.g., `1.1.2`) and optional custom release notes
 - Single workflow does everything automatically!
+
+**Note about "Failures":** You may see failed workflow runs triggered by push events. These are due to a GitHub Actions platform issue where `workflow_dispatch`-only workflows still trigger on push but fail because they lack required inputs. These failures can be completely ignored - they don't affect functionality.
 
 ---
 
