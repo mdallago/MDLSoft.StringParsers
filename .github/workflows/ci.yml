@@ -215,27 +215,5 @@ jobs:
       with:
         category: "/language:csharp"
 
-  deploy:
-    needs: [build-and-test, package, validate-nuget]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-    
-    steps:
-    - name: ⚙️ Setup .NET
-      uses: actions/setup-dotnet@v5
-      with:
-        dotnet-version: '8.0.x'
-    
-    - name: 📥 Download NuGet package artifacts
-      uses: actions/download-artifact@v5
-      with:
-        name: nuget-packages
-        path: ${{ env.NuGetDirectory }}
-    
-    - name: 🚀 Publish NuGet packages
-      run: |
-        foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
-          Write-Host "Publishing package: $($file.Name)"
-          dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-        }
+  # Note: NuGet publishing is now handled by release.yml workflow
+  # which triggers when a GitHub release is published
