@@ -1,13 +1,15 @@
 name: Release
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.2)'
+        description: 'Version to release (e.g., 1.1.2)'
         required: true
+        type: string
+      release_notes:
+        description: 'Release notes (optional - will auto-generate if empty)'
+        required: false
         type: string
 
 env:
@@ -20,45 +22,166 @@ defaults:
 
 jobs:
   release:
-    name: Build and Publish
+    name: Create Release and Publish to NuGet
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases and tags
     
     steps:
-    - name: Checkout code
+    - name: 🛒 Checkout code
       uses: actions/checkout@v5
       with:
-        fetch-depth: 0
+        fetch-depth: 0  # Fetch full history for changelog generation
     
-    - name: Setup .NET
+    - name: ⚙️ Setup .NET
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: '8.0.x'
-    
-    - name: Get version from release
+
+    - name: 🏷️ Validate and prepare version
       id: version
       run: |
-        if ("${{ github.event_name }}" -eq "release") {
-          $version = "${{ github.event.release.tag_name }}"
-        } else {
-          $version = "${{ github.event.inputs.version }}"
-        }
-        $cleanVersion = $version -replace '^v', ''
+        $inputVersion = "${{ github.event.inputs.version }}"
+        $cleanVersion = $inputVersion -replace '^v', ''
+        $tag = "v$cleanVersion"
+        
         echo "VERSION=$cleanVersion" >> $env:GITHUB_OUTPUT
-        Write-Host "Using version: $cleanVersion"
+        echo "TAG=$tag" >> $env:GITHUB_OUTPUT
+        
+        Write-Host "Version: $cleanVersion"
+        Write-Host "Tag: $tag"
+        
+        # Check if tag already exists
+        $existingTag = git tag -l $tag
+        if ($existingTag) {
+          Write-Error "Tag $tag already exists!"
+          exit 1
+        }
     
-    - name: Restore dependencies
+    - name: 📝 Update project version
+      run: |
+        $projectFile = "MDLSoft.StringParsers/MDLSoft.StringParsers.csproj"
+        $version = "${{ steps.version.outputs.VERSION }}"
+        
+        if (-not (Test-Path $projectFile)) {
+          Write-Error "Project file not found: $projectFile"
+          exit 1
+        }
+        
+        $content = Get-Content $projectFile -Raw
+        $content = $content -replace '<Version>[^<]+</Version>', "<Version>$version</Version>"
+        $content = $content -replace '<AssemblyVersion>[^<]+</AssemblyVersion>', "<AssemblyVersion>$version.0</AssemblyVersion>"
+        $content = $content -replace '<FileVersion>[^<]+</FileVersion>', "<FileVersion>$version.0</FileVersion>"
+        
+        Set-Content $projectFile -Value $content -Encoding UTF8
+        Write-Host "✅ Updated project version to: $version"
+        
+        # Show the changes
+        git diff $projectFile
+    
+    - name: 📝 Generate release notes
+      id: release_notes
+      run: |
+        $customNotes = "${{ github.event.inputs.release_notes }}"
+        $tag = "${{ steps.version.outputs.TAG }}"
+        
+        if ($customNotes) {
+          $releaseNotes = $customNotes
+          Write-Host "✅ Using provided release notes"
+        } else {
+          Write-Host "🔄 Auto-generating release notes..."
+          
+          # Get previous tag for comparison
+          $allTags = git tag --sort=-version:refname
+          $previousTag = $allTags | Select-Object -First 1
+          
+          if ($previousTag) {
+            Write-Host "Previous tag: $previousTag"
+            
+            # Get commits since previous tag
+            $commits = git log --oneline "$previousTag..HEAD"
+            
+            $releaseNotes = @"
+## What's Changed
+
+"@
+            
+            if ($commits) {
+              foreach ($commit in ($commits -split "`n")) {
+                if ($commit -and $commit.Trim()) {
+                  $releaseNotes += "`n* $($commit.Trim())"
+                }
+              }
+            } else {
+              $releaseNotes += "`n* Version bump and maintenance updates"
+            }
+            
+            $releaseNotes += "`n`n**Full Changelog**: https://github.com/${{ github.repository }}/compare/$previousTag...$tag"
+          } else {
+            $releaseNotes = @"
+## 🎉 Release $tag
+
+This release includes the latest updates and improvements to MDLSoft.StringParsers.
+
+**Full Changelog**: https://github.com/${{ github.repository }}/commits/$tag
+"@
+          }
+        }
+        
+        # Save release notes to file
+        $releaseNotes | Out-File -FilePath "release-notes.md" -Encoding UTF8
+        Write-Host "✅ Release notes prepared"
+        
+        # Show preview
+        Write-Host "📄 Release notes preview:"
+        Write-Host "---"
+        Write-Host $releaseNotes
+        Write-Host "---"
+    
+    - name: 💾 Commit version changes
+      run: |
+        $version = "${{ steps.version.outputs.VERSION }}"
+        
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        git add MDLSoft.StringParsers/MDLSoft.StringParsers.csproj
+        git commit -m "chore: bump version to $version
+
+🔢 Version Update:
+- Updated to version $version
+- Automated version bump for release
+
+This commit will be tagged as ${{ steps.version.outputs.TAG }}"
+        
+        Write-Host "✅ Version changes committed"
+    
+    - name: 📦 Restore dependencies
       run: dotnet restore
     
-    - name: Build
+    - name: 🔨 Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Test
-      run: dotnet test --configuration Release --no-build
+    - name: 🧪 Test
+      run: dotnet test --configuration Release --no-build --verbosity normal
     
-    - name: Pack
+    - name: 📦 Create NuGet packages
       run: dotnet pack --configuration Release --no-build --output ./artifacts
     
-    - name: Publish to NuGet
+    - name: 🚀 Create GitHub Release and Tag
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.TAG }}
+        name: ${{ steps.version.outputs.TAG }}
+        body_path: release-notes.md
+        draft: false
+        prerelease: false
+        target_commitish: ${{ github.sha }}
+        files: ./artifacts/*.nupkg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: 🚀 Publish to NuGet
       run: |
         $files = Get-ChildItem ./artifacts -Filter "*.nupkg"
         foreach($file in $files) {
@@ -69,8 +192,12 @@ jobs:
             --skip-duplicate
         }
     
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-packages-${{ steps.version.outputs.VERSION }}
-        path: ./artifacts/*.nupkg
+    - name: 📤 Push version commit and tag
+      run: |
+        git push origin main
+        Write-Host "✅ Version commit pushed to main"
+        Write-Host "✅ Release ${{ steps.version.outputs.TAG }} created successfully!"
+        Write-Host "🚀 NuGet packages published successfully!"
+        Write-Host ""
+        Write-Host "🎉 Release process completed!"
+        Write-Host "📄 Release: https://github.com/${{ github.repository }}/releases/tag/${{ steps.version.outputs.TAG }}"
