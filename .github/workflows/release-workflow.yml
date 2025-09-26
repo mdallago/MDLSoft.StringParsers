@@ -113,7 +113,9 @@ jobs:
             # Get commits since previous tag
             $commits = git log --oneline "$previousTag..HEAD"
             
-            $releaseNotes = @"## What's Changed"@ 
+            $releaseNotes = @"
+            ## What's Changed
+            "@ 
             
             if ($commits) {
               foreach ($commit in ($commits -split "`n")) {
